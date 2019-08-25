@@ -73,7 +73,7 @@ void OnCommandList()
 void OnSetLed()
 {
   // Read led state argument, expects 0 or 1 and interprets as false or true 
-  ledState = cmdMessenger.readBoolArg(); 
+  bool ledState = cmdMessenger.readBoolArg(); 
   ShowLedState();  
 }
 

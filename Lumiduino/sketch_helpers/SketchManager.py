@@ -17,11 +17,12 @@ class SketchManager(object):
             "setup": ""
         }
         counter = 0
-        print(self.lines)
         for i in self.lines:
             if i.find("//==========") != -1:
+                i = i.lstrip('\t')
                 line = i.split(" ")
-                part = line[1]
+                index = line.index("//==========")
+                part = line[index+1]
                 self.line_org[part] = counter
             counter += 1
         print(self.line_org)
