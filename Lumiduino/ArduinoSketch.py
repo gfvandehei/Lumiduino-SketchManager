@@ -1,14 +1,17 @@
-from models.Lightstrip import LightStrip
-from models.DHTSensor import DHTSensor
+from Lumiduino.models.Lightstrip import LightStrip
+from Lumiduino.models.DHTSensor import DHTSensor
+from Lumiduino.sketch_helpers.SketchManager import SketchManager
 import os
 
 class ArduinoSketch(object):
-    def __init__(self, build_dir: "../"):
+    def __init__(self, build_dir="./"):
         self.build_dir = build_dir
         self.sketch_file = None
         self.check_build_dir()
         self.create_sketch()
+        self.sketch_manager = SketchManager("data/sketch_template.ino")
         option_dict = self.ask_setupoptions()
+        self.write_arduino_sketch(option_dict)
 
 
     def check_build_dir(self):
@@ -31,7 +34,7 @@ class ArduinoSketch(object):
     def ask_resp_bool(message):
         resp = input(message+" [y/n]")
         resp = resp.lower()
-        if resp.find("y"):
+        if resp.find("y") != -1:
             return True
         else:
             return False
@@ -91,14 +94,13 @@ class ArduinoSketch(object):
                 option_dict['dht_sensors'].append(DHTSensor(pin, typel))
         return option_dict
 
-    def write_arduino_sketch(self, f, options_dict):
-        if options_dict['import']['neopixels']:
-            f.write('#include "FastLed.h"\n')
-        if options_dict['import']['dht sensors']:
-            f.write('#include "DHT.h"\n')
-
+    def write_arduino_sketch(self, options_dict):
+        self.sketch_manager.setup_leds(options_dict['neopixel_strips'])
+        self.sketch_manager.setup_dhts(options_dict['dht_sensors'])
+        lines = self.sketch_manager.retrieve_lines()
+        self.sketch_file.writelines(line + '\n' for line in lines)
         
 
 
 
-
+ArduinoSketch()

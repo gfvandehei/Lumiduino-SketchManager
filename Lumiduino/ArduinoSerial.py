@@ -2,8 +2,6 @@ import serial
 import serial.tools.list_ports
 
 class ArduinoSerial(object):
-    connected_arduino = {}
-    arduino_serial = {}
     options = {}
     
     def list_ports(self):

@@ -34,7 +34,6 @@
 
 // Attach a new CmdMessenger object to the default Serial port
 CmdMessenger cmdMessenger = CmdMessenger(Serial);
-
 //========== member_variables
 
 
@@ -109,8 +108,7 @@ void setup()
   // Adds newline to every command
   cmdMessenger.printLfCr();
 
-  //========== setup_leds
-  //========== setup_dhts
+  //========== setup
 
   // Attach my application's user-defined callback methods
   attachCommandCallbacks();
