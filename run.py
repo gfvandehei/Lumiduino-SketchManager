@@ -1,4 +1,4 @@
-from Lumiduino.ArduinoSketch import ArduinoSketch
+from LumiduinoSketchManager.ArduinoSketch import ArduinoSketch
 import sys
 
 ArduinoSketch()
