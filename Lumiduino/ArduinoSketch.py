@@ -100,7 +100,3 @@ class ArduinoSketch(object):
         lines = self.sketch_manager.retrieve_lines()
         self.sketch_file.writelines(line + '\n' for line in lines)
         
-
-
-
-ArduinoSketch()

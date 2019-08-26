@@ -1,3 +1,6 @@
 *__pycache__*
 *build*
+build
 sketch
+.vscode
+*.egg-info

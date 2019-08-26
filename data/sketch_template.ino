@@ -43,6 +43,7 @@ enum
 {
   kCommandList         , // Command to request list of available commands              , // Command to request led to be set in specific state  
   kSetPixel            , // Command to request led to be set in to specific brightness  
+  kSetStrip            , // Command to set entire strip to color 
   kStatus              , // Command to request led status
 };
 
@@ -54,6 +55,7 @@ void attachCommandCallbacks()
   cmdMessenger.attach(kCommandList, OnCommandList);
   cmdMessenger.attach(kSetPixel, OnSetLed);
   cmdMessenger.attach(kStatus, OnStatus);
+  cmdMessenger.attach(kSetStrip, OnSetStrip);
 }
 
 // Called when a received command has no attached function
@@ -73,8 +75,55 @@ void OnCommandList()
 void OnSetLed()
 {
   // Read led state argument, expects 0 or 1 and interprets as false or true 
-  bool ledState = cmdMessenger.readBoolArg(); 
-  ShowLedState();  
+  int strip = cmdMessenger.readInt16Arg();
+  int pixel = cmdMessenger.readInt16Arg();
+  int r = cmdMessenger.readInt16Arg();
+  int g = cmdMessenger.readInt16Arg();
+  int b = cmdMessenger.readInt16Arg();
+  int brightness = cmdMessenger.readInt16Arg(); 
+  //strips is the generated array of neopixels
+  //striplen is the length of This
+  //lengths is the generated array of strip lengths
+  if(strip >= strip_amt) {
+    Serial.print("The requested strip does not exist");   
+    return;
+  }
+  if(pixel >= lengths[strip]) {
+    Serial.print("The requested pixel does not exist");
+    return;
+  }
+  if (r > 255 || g > 255 || b > 255 || brightness > 255){
+    Serial.print("Check your values");
+    return;
+  }
+  strips[strip][pixel] = CRGB(r,g,b);
+  FastLED.setBrightness(brightness);
+  FastLED.show();
+  Serial.print("OK");
+}
+
+void OnSetStrip() {
+  int strip = cmdMessenger.readInt16Arg();
+  int r = cmdMessenger.readInt16Arg();
+  int g = cmdMessenger.readInt16Arg();
+  int b = cmdMessenger.readInt16Arg();
+  int brightness = cmdMessenger.readInt16Arg(); 
+
+  if(strip >= strip_amt) {
+    Serial.print("The requested strip does not exist");   
+    return;
+  }
+  if (r > 255 || g > 255 || b > 255 || brightness > 255){
+    Serial.print("Check your values");
+    return;
+  }
+
+  for(int i = 0; i<lengths[strip]; i++){
+    strips[strip][i] = CRGB(r,g,b);
+  }
+  FastLED.setBrightness(brightness);
+  FastLED.show();
+  Serial.print("OK");
 }
 
 // Callback function that shows led status
@@ -90,7 +139,8 @@ void ShowCommands()
   Serial.println("Available commands");
   Serial.println(" 0;                 - This command list");
   Serial.println(" 1,<strip>, <pixel>, <r>, <g>, <b>, <brightness>;");
-  Serial.println(" 2;                  - Show led state");
+  Serial.println(" 1,<strip>, <r>, <g>, <b>, <brightness>;");
+  Serial.println(" 3;                  - Show led state");
 }
 
 // Show led state

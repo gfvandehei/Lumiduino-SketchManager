@@ -34,19 +34,22 @@ class SketchManager(object):
         self.sections_text['member_variables'] += "int strip_amt = "+str(strip_amt)+";\n"
         led_arr.sort(key=lambda x: x.length)
         names = ""
+        lengths = ""
         for i, strip in enumerate(led_arr):
             self.sections_text['member_variables'] += "CRGB strip{}[{}];\n".format(i, strip.get_length())
             names += "strip{},".format(i)
+            lengths += "{},".format(strip.get_length())
             self.sections_text['setup'] += "FastLED.addLeds<{}, {}>(strip{}, {});\n".format(
                 strip.get_type(),
                 strip.get_pin(),
                 i,
                 strip.get_length()
             )
-        if names[-1] == ",":
-            names.rstrip(",")
+        names.rstrip(",")
+        lengths.rstrip(",")
         print(names)
         self.sections_text['member_variables'] += "CRGB* strips[] = {"+names+"};\n"
+        self.sections_text['member_variables'] += "int lengths[] = {"+lengths+"};\n"
     
     def setup_dhts(self, dht_arr):
         pass
