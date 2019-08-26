@@ -32,48 +32,61 @@
 #include "FastLED.h"
 #include "DHT.h"
 
-// Attach a new CmdMessenger object to the default Serial port
-CmdMessenger cmdMessenger = CmdMessenger(Serial);
-//========== member_variables
-
-
 // This is the list of recognized commands.  
 // In order to receive, attach a callback function to these events
 enum
 {
-  kCommandList         , // Command to request list of available commands              , // Command to request led to be set in specific state  
-  kSetPixel            , // Command to request led to be set in to specific brightness  
-  kSetStrip            , // Command to set entire strip to color 
-  kStatus              , // Command to request led status
-};
+  // Received
+  r_info      ,
+  r_cmds      ,
+  r_ping      ,
+  r_set_pixel ,
+  r_set_strip ,
 
-// Callbacks define on which received commands we take action
-void attachCommandCallbacks()
-{
-  // Attach callback methods
-  cmdMessenger.attach(OnUnknownCommand);
-  cmdMessenger.attach(kCommandList, OnCommandList);
-  cmdMessenger.attach(kSetPixel, OnSetLed);
-  cmdMessenger.attach(kStatus, OnStatus);
-  cmdMessenger.attach(kSetStrip, OnSetStrip);
-}
+  // Sent
+  s_info      ,
+  s_cmds      ,
+  s_pong      ,
+  s_ack       ,
+  s_err       ,
+  s_unknown   ,
+  s_msg       ,
+};
+// Attach a new CmdMessenger object to the default Serial port
+CmdMessenger cmdMessenger = CmdMessenger(Serial, ',', ';', '/');
+//========== member_variables
 
 // Called when a received command has no attached function
 void OnUnknownCommand()
 {
-  Serial.println("This command is unknown!");
-  ShowCommands();
+  cmdMessenger.sendCmd(s_unknown);
+}
+
+// Callback function that shows a list of connected sensors and lights
+void OnInfo() {
+  const char* info = ""
+    " //========== info"
+    "";
+  cmdMessenger.sendCmd(s_info, info);
 }
 
 // Callback function that shows a list of commands
-void OnCommandList()
-{
-  ShowCommands();
+void OnCommandList() {
+  const char* commandlist = "0;  | show device information\n"
+    "1;  | show available commands, this list\n"
+    "2;  | ping for heartbeat\n"
+    "3, <strip>, <pixel>, <r>, <g>, <b>, <brightness>;  | set a pixels color\n"
+    "4, <strip>, <r>, <g>, <b>, <brightness>;  | set an entire strips color\n";
+  cmdMessenger.sendCmd(s_cmds, commandlist);
+}
+
+//Callback function for connection heartbeat
+void OnPing() {
+  cmdMessenger.sendCmd(s_pong);
 }
 
 // Callback function that sets led on or off
-void OnSetLed()
-{
+void OnSetPixel() {
   // Read led state argument, expects 0 or 1 and interprets as false or true 
   int strip = cmdMessenger.readInt16Arg();
   int pixel = cmdMessenger.readInt16Arg();
@@ -85,21 +98,21 @@ void OnSetLed()
   //striplen is the length of This
   //lengths is the generated array of strip lengths
   if(strip >= strip_amt) {
-    Serial.print("The requested strip does not exist");   
+    cmdMessenger.sendCmd(s_err,"The requested strip does not exist");   
     return;
   }
   if(pixel >= lengths[strip]) {
-    Serial.print("The requested pixel does not exist");
+    cmdMessenger.sendCmd(s_err,"The requested pixel does not exist");
     return;
   }
   if (r > 255 || g > 255 || b > 255 || brightness > 255){
-    Serial.print("Check your values");
+    cmdMessenger.sendCmd(s_err,"Check your values");
     return;
   }
   strips[strip][pixel] = CRGB(r,g,b);
   FastLED.setBrightness(brightness);
   FastLED.show();
-  Serial.print("OK");
+  cmdMessenger.sendCmd(s_ack);
 }
 
 void OnSetStrip() {
@@ -110,11 +123,11 @@ void OnSetStrip() {
   int brightness = cmdMessenger.readInt16Arg(); 
 
   if(strip >= strip_amt) {
-    Serial.print("The requested strip does not exist");   
+    cmdMessenger.sendCmd(s_err,"The requested strip does not exist");   
     return;
   }
   if (r > 255 || g > 255 || b > 255 || brightness > 255){
-    Serial.print("Check your values");
+    cmdMessenger.sendCmd(s_err,"Check your values");
     return;
   }
 
@@ -123,30 +136,33 @@ void OnSetStrip() {
   }
   FastLED.setBrightness(brightness);
   FastLED.show();
-  Serial.print("OK");
+  cmdMessenger.sendCmd(s_ack);
 }
 
-// Callback function that shows led status
-void OnStatus()
+// Callbacks define on which received commands we take action
+void attachCommandCallbacks()
 {
-  // Send back status that describes the led state
-  ShowLedState();  
-}
+  /*
+    // Received
+    r_info      ,
+    r_ping      ,
+    r_set_pixel ,
+    r_set_strip ,
 
-// Show available commands
-void ShowCommands() 
-{
-  Serial.println("Available commands");
-  Serial.println(" 0;                 - This command list");
-  Serial.println(" 1,<strip>, <pixel>, <r>, <g>, <b>, <brightness>;");
-  Serial.println(" 1,<strip>, <r>, <g>, <b>, <brightness>;");
-  Serial.println(" 3;                  - Show led state");
-}
-
-// Show led state
-void ShowLedState() 
-{
-    Serial.print("STATE");
+    // Sent
+    s_info      ,
+    s_ping      ,
+    s_ack       ,
+    s_err       ,
+    s_msg       ,
+   */
+  // Attach callback methods
+  cmdMessenger.attach(OnUnknownCommand);
+  cmdMessenger.attach(r_info, OnInfo);
+  cmdMessenger.attach(r_cmds, OnCommandList);
+  cmdMessenger.attach(r_ping, OnPing);
+  cmdMessenger.attach(r_set_pixel, OnSetPixel);
+  cmdMessenger.attach(r_set_strip, OnSetStrip);
 }
 
 // Setup function
@@ -164,7 +180,7 @@ void setup()
   attachCommandCallbacks();
   
   // Show command list
-  ShowCommands();
+  OnCommandList();
 }
 
 // Loop function
