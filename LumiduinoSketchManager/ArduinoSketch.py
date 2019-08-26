@@ -1,6 +1,6 @@
-from Lumiduino.models.Lightstrip import LightStrip
-from Lumiduino.models.DHTSensor import DHTSensor
-from Lumiduino.sketch_helpers.SketchManager import SketchManager
+from LumiduinoSketchManager.models.Lightstrip import LightStrip
+from LumiduinoSketchManager.models.DHTSensor import DHTSensor
+from LumiduinoSketchManager.sketch_helpers.SketchManager import SketchManager
 import os
 
 class ArduinoSketch(object):

@@ -1,5 +1,5 @@
 import os
-from Lumiduino.models.Lightstrip import LightStrip
+from LumiduinoSketchManager.models.Lightstrip import LightStrip
 class SketchManager(object):
     
     def __init__(self, filename):
